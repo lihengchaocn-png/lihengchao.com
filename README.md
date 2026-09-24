@@ -15,7 +15,7 @@
 
 GitHub 仓库：<https://github.com/lihengchaocn-png/lihengchao.com>
 
-在 Cloudflare 控制台选择 **Workers & Pages → Create application → Pages → Connect to Git**，连接上面的仓库。生产分支选 `main`，Framework preset 选 `None`，Build command 留空，Build output directory 填 `.`（仓库根目录）。部署成功后，先检查 Cloudflare 提供的 `*.pages.dev` 地址。
+在 Cloudflare 控制台选择 **Workers & Pages → Create application → Continue to Pages → Import an existing Git repository**，连接上面的仓库。生产分支选 `main`，Framework preset 选 `None`，Build command 留空，Build output directory 填 `.`（仓库根目录）。部署成功后，先检查 Cloudflare 提供的 `*.pages.dev` 地址。
 
 在 Pages 项目的 **Custom domains → Set up a domain** 中添加 `lihengchao.com`。根域名需要先在 Cloudflare 添加域名，再将 Porkbun 的 Nameservers 改为 Cloudflare 分配的两条。不要手动猜测或填写固定 IP 地址。
 
