@@ -11,6 +11,16 @@
 - 搜索 `const resume` 修改完整简历。点击「查看简历」可阅读或打印为 PDF。
 - 页面所有经历、笔记与时间均为演示内容，请在发布前替换。
 
+## 风格预览
+
+在线比较：<https://www.lihengchao.com/styles/>。本地预览访问 `/styles/`，可切换桌面与手机尺寸，也可独立打开每一版。
+
+- **纸上手记**（`styles/editorial.html`）：米白纸感、衬线标题、编辑式排版。
+- **技术实验室**（`styles/lab.html`）：深色网格、荧光绿、技术笔记与实验。
+- **蓝白工作室**（`styles/studio.html`）：明亮蓝白、抽象轨道图形、卡片式笔记。
+
+三套预览共用 `styles/data.js` 中的演示笔记与简历；样式在 `styles/shared.css`，交互在 `styles/shared.js`。预览内容与根目录主页各自维护。
+
 ## 部署到 Cloudflare Pages
 
 GitHub 仓库：<https://github.com/lihengchaocn-png/lihengchao.com>
