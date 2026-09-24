@@ -1,25 +1,86 @@
-# 个人主页
+# Hengchao 的个人主页
 
-一个无需构建、没有外部依赖的响应式个人主页 demo，包含笔记分类、文章阅读弹窗和可打印简历。
+默认主页为 **蓝白工作室**。保留四种风格，全部读取同一份 Markdown 笔记和简历，无需构建。
 
-直接用浏览器打开 `index.html`，或在当前目录运行 `uv run python -m http.server 8000`，访问 http://localhost:8000。
+- 正式主页：<https://www.lihengchao.com/>
+- 四种风格：<https://www.lihengchao.com/styles/>
 
-## 修改内容
+## 日常更新内容
 
-- 在 `index.html` 中修改姓名、简介、简历与页脚。
-- 搜索 `const notes` 修改笔记；分类来自每篇笔记的 `category` 字段。
-- 搜索 `const resume` 修改完整简历。点击「查看简历」可阅读或打印为 PDF。
-- 页面所有经历、笔记与时间均为演示内容，请在发布前替换。
+| 内容 | 文件 |
+| --- | --- |
+| 完整简历 | `content/resume.md` |
+| 每篇笔记 | `content/notes/*.md`，一篇一个文件 |
+| 新笔记模板 | `content/notes/_template.md` |
+| 笔记文件清单 | `content/notes/index.json`，由脚本更新 |
 
-## 风格预览
+**修改已有笔记或简历：直接编辑对应 `.md` 文件，然后提交并推送到 GitHub。** 四套页面会读取同一份更新，不用改 HTML 或 JavaScript。也可以在 GitHub 网页中编辑对应 Markdown 文件并提交。
 
-在线比较：<https://www.lihengchao.com/styles/>。本地预览访问 `/styles/`，可切换桌面与手机尺寸，也可独立打开每一版。
+### 新增笔记
 
-- **纸上手记**（`styles/editorial.html`）：米白纸感、衬线标题、编辑式排版。
-- **技术实验室**（`styles/lab.html`）：深色网格、荧光绿、技术笔记与实验。
-- **蓝白工作室**（`styles/studio.html`）：明亮蓝白、抽象轨道图形、卡片式笔记。
+1. 复制 `content/notes/_template.md`，命名如 `2026-09-24-my-first-note.md`。文件名只用小写字母、数字和连字符。
+2. 修改顶部元数据和正文。
+3. 在项目根目录运行 `node scripts/update-notes.mjs`，自动更新笔记清单；删除笔记后也运行一次。
+4. 将 Markdown 和更新后的 `content/notes/index.json` 一起提交、推送。
 
-三套预览共用 `styles/data.js` 中的演示笔记与简历；样式在 `styles/shared.css`，交互在 `styles/shared.js`。预览内容与根目录主页各自维护。
+如果只在 GitHub 网页操作，创建 Markdown 后，将文件名添加到 `content/notes/index.json` 数组中即可。模板以 `_` 开头，不会被加入清单。
+
+```markdown
+---
+title: "我的第一篇笔记"
+category: "技术"
+date: "2026-09-24"
+summary: "首页卡片显示的简短摘要。"
+readTime: "3 min"
+demo: false
+---
+
+这里是正文，支持 **粗体**、*斜体*、`行内代码`。
+
+## 一个小标题
+
+- 第一条想法
+- 第二条想法
+```
+
+- `title`、`category`、`date`、`summary` 必填，日期使用 `YYYY-MM-DD`。
+- `readTime` 可选，省略后根据正文长度估算。
+- `demo: true` 会标记为演示笔记；真实内容使用 `false` 或删除此行。
+- 笔记自动按日期从新到旧排列，分类自动从笔记中读取；可以增加新分类。
+- 正文支持标题、段落、列表、引用、代码块、链接、图片和表格。图片建议放在 `content/images/` 下，用 `/content/images/文件名.png` 这样的根路径引用，保证所有风格下地址一致。
+- 简历文件顶部保留 `title`，下方直接写 Markdown 正文；支持打印或保存 PDF。
+
+现有经历与笔记仍是演示内容。首页的简短介绍和页脚属于页面排版，修改位置见下方。
+
+## 本地预览与检查
+
+```sh
+uv run python -m http.server 8000
+```
+
+访问 <http://localhost:8000/>，风格入口为 <http://localhost:8000/styles/>。页面通过 HTTP 读取 Markdown，需要使用本地服务器，不能直接双击 HTML 文件预览内容。
+
+```sh
+node --test tests/content.test.cjs
+```
+
+## 四种风格与代码
+
+| 风格 | 页面 |
+| --- | --- |
+| 蓝白工作室（默认） | `index.html`、`styles/studio.html` |
+| 纸上手记 | `styles/editorial.html` |
+| 技术实验室 | `styles/lab.html` |
+| 日常花园（最初版本） | `styles/original.html` |
+
+- `styles/index.html`：风格切换及桌面／手机预览。
+- `styles/shared.css`：三套新风格；原版样式保存在 `styles/original.html` 中。
+- `styles/markdown.css`：四套风格共用的文章与简历排版。
+- `styles/content.js`：读取 Markdown、解析 YAML 元数据、渲染和清理 HTML。
+- `styles/shared.js`：分类筛选、阅读弹窗、简历和打印交互。
+- `vendor/`：随站点提供的解析库与许可证，无运行时 CDN 请求，版本见其中的 README。
+
+如修改默认主页的固定介绍或布局，同时更新 `index.html` 和 `styles/studio.html`；笔记与简历只修改 Markdown 即可。
 
 ## 部署到 Cloudflare Pages
 
