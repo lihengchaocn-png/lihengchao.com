@@ -17,6 +17,8 @@ GitHub 仓库：<https://github.com/lihengchaocn-png/lihengchao.com>
 
 在 Cloudflare 控制台选择 **Workers & Pages → Create application → Continue to Pages → Import an existing Git repository**，连接上面的仓库。生产分支选 `main`，Framework preset 选 `None`，Build command 留空，Build output directory 填 `.`（仓库根目录）。部署成功后，先检查 Cloudflare 提供的 `*.pages.dev` 地址。
 
-在 Pages 项目的 **Custom domains → Set up a domain** 中添加 `lihengchao.com`。根域名需要先在 Cloudflare 添加域名，再将 Porkbun 的 Nameservers 改为 Cloudflare 分配的两条。不要手动猜测或填写固定 IP 地址。
+当前 Pages 项目为 `lihengchao-com`，预览地址为 <https://lihengchao-com.pages.dev>，正式地址为 <https://www.lihengchao.com>。向 GitHub 的 `main` 分支推送更新后，Cloudflare Pages 会自动部署。
+
+域名继续使用 Porkbun 的 Nameservers。在 Pages 项目的 **Custom domains** 中绑定 `www.lihengchao.com`，Porkbun DNS 添加 `CNAME www → lihengchao-com.pages.dev`。根域名 `lihengchao.com` 通过 Porkbun URL Forwarding 以 301 跳转至 `https://www.lihengchao.com`，保留请求路径，关闭 Wildcard Forwarding。邮件转发的 MX 和 SPF 记录保留。
 
 **发布前请替换页面中的演示经历、笔记和时间。**
