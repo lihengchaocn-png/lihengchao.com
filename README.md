@@ -20,10 +20,10 @@
 
 1. 复制 `content/notes/_template.md`，命名如 `2026-09-24-my-first-note.md`。文件名只用小写字母、数字和连字符。
 2. 修改顶部元数据和正文。
-3. 在项目根目录运行 `node scripts/update-notes.mjs`，自动更新笔记清单；删除笔记后也运行一次。
-4. 将 Markdown 和更新后的 `content/notes/index.json` 一起提交、推送。
+3. 在项目根目录运行 `node scripts/update-notes.mjs`，自动更新笔记清单和独立阅读页面；删除笔记后也运行一次。
+4. 将 Markdown、`content/notes/index.json` 和 `notes/` 中生成的页面变更一起提交、推送。
 
-如果只在 GitHub 网页操作，创建 Markdown 后，将文件名添加到 `content/notes/index.json` 数组中即可。模板以 `_` 开头，不会被加入清单。
+已有笔记和简历仍可直接在 GitHub 网页中编辑 Markdown。新增或删除笔记时，需要运行上面的本地命令并提交生成的页面。模板以 `_` 开头，不会被加入清单。`notes/` 与 `resume/` 中的 HTML 由脚本生成，日常正文更新只需修改 Markdown。
 
 ```markdown
 ---
@@ -77,10 +77,27 @@ node --test tests/content.test.cjs
 - `styles/shared.css`：三套新风格；原版样式保存在 `styles/original.html` 中。
 - `styles/markdown.css`：四套风格共用的文章与简历排版。
 - `styles/content.js`：读取 Markdown、解析 YAML 元数据、渲染和清理 HTML。
-- `styles/shared.js`：分类筛选、阅读弹窗、简历和打印交互。
+- `styles/shared.js`：分类筛选和独立阅读页链接。
+- `styles/reader.js`、`styles/reader.css`：文章与简历的独立阅读页，支持复制链接、Markdown 下载和简历打印。
+- `scripts/reader-template.html`：独立阅读页面模板；修改后运行 `node scripts/update-notes.mjs`。
 - `vendor/`：随站点提供的解析库与许可证，无运行时 CDN 请求，版本见其中的 README。
 
 如修改默认主页的固定介绍或布局，同时更新 `index.html` 和 `styles/studio.html`；笔记与简历只修改 Markdown 即可。
+
+## 查看每篇文章和简历的访问量
+
+文章和简历使用真实的独立 HTML 地址，点击后会加载新页面，由 Cloudflare Web Analytics 自动记录页面浏览量：
+
+- 文章：`/notes/2026-09-20-personal-homepage/` 等，每个 Markdown 文件名对应一个稳定路径。
+- 简历：`/resume/`。
+- 四种风格使用相同路径；`?style=lab` 等参数只控制外观，Cloudflare 不记录查询参数，因此同一篇文章会汇总在同一个 Path 下。
+- 修改标题或正文不会改变统计路径；重命名 Markdown 文件会产生新路径。
+
+后台入口：**Cloudflare → Workers & Pages → lihengchao-com → Metrics → View Web Analytics → Page views**。查看 **Paths** 分组，或添加 **Path** 筛选即可查看一篇文章或简历；可再使用 **Host = www.lihengchao.com** 筛选排除 `pages.dev` 地址的流量。
+
+Web Analytics 已在项目中开启，部署时由 Cloudflare 自动注入脚本，请勿重复手动添加。统计从启用后的访问开始，无法补回之前弹窗阅读的数据。数据可能延迟显示，PV 代表页面浏览次数，不是去重人数；广告拦截器和网络问题可能使部分访问无法上报。统计位于 Cloudflare 管理后台，网站前台不展示计数。
+
+官方文档：[Pages 统计设置](https://developers.cloudflare.com/pages/how-to/web-analytics/)、[Path / Host 维度](https://developers.cloudflare.com/web-analytics/data-metrics/dimensions/)、[统计口径与限制](https://developers.cloudflare.com/web-analytics/faq/)。
 
 ## 部署到 Cloudflare Pages
 

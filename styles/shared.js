@@ -1,7 +1,4 @@
 const list = document.querySelector('#note-list');
-const reader = document.querySelector('#reader');
-const readerBody = document.querySelector('#reader-body');
-const printButton = document.querySelector('.print-button');
 const cardArts = [
   '<svg viewBox="0 0 320 150" fill="none" aria-hidden="true"><path d="M85 106V43h130v63z" stroke="currentColor" stroke-width="2"/><path d="M85 58h130M100 51h3m5 0h3m5 0h3M137 75l-13 11 13 11m29-22 13 11-13 11m-10-28-10 53" stroke="currentColor" stroke-width="2"/><circle cx="236" cy="48" r="18" fill="currentColor" opacity=".25"/><path d="M64 120h188" stroke="currentColor"/></svg>',
   '<svg viewBox="0 0 320 150" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5"><path d="m90 42 70 33 70-33M90 108l70-33 70 33M90 42v66m140-66v66M160 28v94M90 42l70-14 70 14M90 108l70 14 70-14"/><circle cx="160" cy="75" r="26"/></g><g fill="currentColor"><circle cx="90" cy="42" r="5"/><circle cx="90" cy="108" r="5"/><circle cx="230" cy="42" r="5"/><circle cx="230" cy="108" r="5"/><circle cx="160" cy="75" r="8"/></g></svg>',
@@ -10,33 +7,9 @@ const cardArts = [
 const labels = { 技术: '技术探索', 阅读: '阅读思考', 生活: '生活随记' };
 let notes = [];
 let activeCategory = '全部';
-let readerRequest = 0;
+const theme = ['editorial', 'lab', 'original'].find(name => document.body.classList.contains(name)) || 'studio';
+const readingURL = path => theme === 'studio' ? path : `${path}?style=${theme}`;
 const escapeHTML = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-
-function openReader(title, content, isResume = false, source = '') {
-  readerRequest += 1;
-  readerBody.replaceChildren();
-  const heading = document.createElement('h2');
-  heading.id = 'reader-title';
-  heading.textContent = title;
-  const article = document.createElement('div');
-  article.innerHTML = content;
-  readerBody.append(heading, article);
-  if (source) {
-    const paragraph = document.createElement('p');
-    paragraph.className = 'reader-source';
-    const link = document.createElement('a');
-    link.href = source;
-    link.download = source.split('/').pop();
-    link.textContent = '下载 Markdown ↗';
-    paragraph.append(link);
-    readerBody.append(paragraph);
-  }
-  document.querySelector('#reader-label').textContent = isResume ? 'CURRICULUM VITAE' : 'FIELD NOTES';
-  printButton.hidden = !isResume;
-  if (!reader.open) reader.showModal();
-  reader.scrollTop = 0;
-}
 
 function renderFilters() {
   const group = document.querySelector('.filters');
@@ -64,8 +37,10 @@ function render() {
   }
   filtered.forEach(note => {
     const index = notes.indexOf(note);
-    const button = document.createElement('button');
+    const button = document.createElement('a');
     button.className = 'note';
+    button.href = readingURL(note.path);
+    button.target = '_top';
     const art = document.body.classList.contains('studio') ? `<div class="card-art">${cardArts[index % 3]}</div>` : '';
     const date = note.date.replaceAll('-', '.');
     const meta = `<span class="tag ${note.category === '生活' ? 'life' : ''}">${escapeHTML(labels[note.category] || note.category)}</span><time datetime="${escapeHTML(note.date)}">${date}</time><span>${escapeHTML(note.time)}</span>`;
@@ -73,10 +48,6 @@ function render() {
     button.innerHTML = document.body.classList.contains('original')
       ? `<span class="note-meta">${meta}</span><span class="note-title">${title}</span><p>${escapeHTML(note.summary)}</p>`
       : `${art}<div class="card-text"><div class="note-meta">${meta}</div><div class="note-title">${title}</div><p>${escapeHTML(note.summary)}</p></div>`;
-    button.addEventListener('click', () => {
-      const notice = `${note.demo ? '演示笔记 · ' : ''}${date} · ${note.category}`;
-      openReader(note.title, `<p class="notice">${escapeHTML(notice)}</p>${SiteContent.renderMarkdown(note.markdown)}`, false, note.url);
-    });
     list.append(button);
   });
 }
@@ -102,22 +73,6 @@ async function loadNotes() {
   }
 }
 
-async function showResume(event) {
-  if (event) event.preventDefault();
-  openReader('个人简历', '<p role="status">正在打开简历…</p>');
-  const request = readerRequest;
-  try {
-    const resume = await SiteContent.loadResume();
-    if (!reader.open || request !== readerRequest) return;
-    openReader(resume.meta.title, SiteContent.renderMarkdown(resume.markdown), true, resume.url);
-  } catch (error) {
-    console.error('简历加载失败', error);
-    if (!reader.open || request !== readerRequest) return;
-    openReader('个人简历', '<p role="alert">简历暂时无法加载，请稍后重试。</p><button class="reader-retry" type="button">重新加载</button>');
-    readerBody.querySelector('.reader-retry').addEventListener('click', showResume);
-  }
-}
-
 document.querySelector('.filters').addEventListener('click', event => {
   const button = event.target.closest('[data-filter]');
   if (!button) return;
@@ -128,13 +83,8 @@ document.querySelector('.filters').addEventListener('click', event => {
     if (item.dataset.filter === activeCategory) item.focus();
   });
 });
-document.querySelectorAll('[data-resume]').forEach(button => button.addEventListener('click', showResume));
-document.querySelector('.close').addEventListener('click', () => reader.close());
-reader.addEventListener('close', () => { readerRequest += 1; });
-reader.addEventListener('click', event => {
-  if (event.target !== reader) return;
-  const rect = reader.getBoundingClientRect();
-  if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) reader.close();
+document.querySelectorAll('[data-resume]').forEach(link => {
+  link.href = readingURL('/resume/');
+  link.target = '_top';
 });
-printButton.addEventListener('click', () => window.print());
 loadNotes();

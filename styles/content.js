@@ -35,22 +35,26 @@
       throw new Error('笔记索引必须是 Markdown 文件名数组');
     }
     if (new Set(files).size !== files.length) throw new Error('笔记索引包含重复文件');
-    const notes = await Promise.all(files.map(async file => {
-      const url = CONTENT + 'notes/' + file;
-      const { meta, markdown } = parseDocument(await readText(url));
-      for (const field of ['category', 'summary']) {
-        if (typeof meta[field] !== 'string' || !meta[field].trim()) throw new Error(`${file}: 缺少 ${field}`);
-      }
-      if (!validDate(meta.date)) throw new Error(`${file}: date 应为 YYYY-MM-DD`);
-      if (meta.readTime !== undefined && typeof meta.readTime !== 'string') throw new Error(`${file}: readTime 应为字符串`);
-      if (meta.demo !== undefined && typeof meta.demo !== 'boolean') throw new Error(`${file}: demo 应为 true 或 false`);
-      return {
-        title: meta.title, category: meta.category, summary: meta.summary,
-        date: meta.date, time: meta.readTime || `${Math.max(1, Math.ceil(markdown.length / 400))} min`,
-        demo: meta.demo === true, markdown, url
-      };
-    }));
+    const notes = await Promise.all(files.map(file => loadNote(file.slice(0, -3))));
     return notes.sort((a, b) => b.date.localeCompare(a.date));
+  }
+
+  async function loadNote(slug) {
+    if (typeof slug !== 'string' || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) throw new Error('无效的笔记标识');
+    const file = slug + '.md';
+    const url = CONTENT + 'notes/' + file;
+    const { meta, markdown } = parseDocument(await readText(url));
+    for (const field of ['category', 'summary']) {
+      if (typeof meta[field] !== 'string' || !meta[field].trim()) throw new Error(`${file}: 缺少 ${field}`);
+    }
+    if (!validDate(meta.date)) throw new Error(`${file}: date 应为 YYYY-MM-DD`);
+    if (meta.readTime !== undefined && typeof meta.readTime !== 'string') throw new Error(`${file}: readTime 应为字符串`);
+    if (meta.demo !== undefined && typeof meta.demo !== 'boolean') throw new Error(`${file}: demo 应为 true 或 false`);
+    return {
+      title: meta.title, category: meta.category, summary: meta.summary,
+      date: meta.date, time: meta.readTime || `${Math.max(1, Math.ceil(markdown.length / 400))} min`,
+      demo: meta.demo === true, markdown, url, slug, path: `/notes/${slug}/`
+    };
   }
 
   async function loadResume() {
@@ -67,5 +71,5 @@
     });
   }
 
-  root.SiteContent = { parseDocument, loadNotes, loadResume, renderMarkdown };
+  root.SiteContent = { parseDocument, loadNotes, loadNote, loadResume, renderMarkdown };
 })(globalThis);

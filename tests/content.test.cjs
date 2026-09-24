@@ -78,3 +78,27 @@ test('a failed request can be retried after the content becomes available', asyn
   await assert.rejects(content.loadResume(), /503/);
   assert.equal((await content.loadResume()).markdown, 'New content');
 });
+
+test('every note has a unique, real HTML route for page-view analytics', async () => {
+  const content = await contentAPI();
+  const notes = await content.loadNotes();
+  assert.equal(new Set(notes.map(note => note.path)).size, notes.length);
+  for (const note of notes) {
+    assert.equal(note.path, `/notes/${note.slug}/`);
+    const html = await fs.readFile(path.join(root, note.path, 'index.html'), 'utf8');
+    assert.ok(html.includes(`data-slug="${note.slug}"`));
+    assert.ok(html.includes(`href="https://www.lihengchao.com${note.path}"`));
+    assert.ok(!html.includes('{{'));
+    assert.equal((await content.loadNote(note.slug)).markdown, note.markdown);
+  }
+  const resume = await fs.readFile(path.join(root, 'resume/index.html'), 'utf8');
+  assert.ok(resume.includes('data-kind="resume"'));
+  assert.ok(resume.includes('href="https://www.lihengchao.com/resume/"'));
+});
+
+test('standalone reader rejects path traversal before fetching', async () => {
+  const content = await contentAPI();
+  for (const slug of ['../resume', '/resume', 'a?b', 'name.md', '']) {
+    await assert.rejects(content.loadNote(slug), /无效的笔记标识/);
+  }
+});
